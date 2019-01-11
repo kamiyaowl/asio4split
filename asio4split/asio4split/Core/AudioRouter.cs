@@ -10,11 +10,11 @@ namespace asio4split.Core {
         /// <summary>
         /// ルーティング元のデバイス
         /// </summary>
-        public MMDevice CaptureDevice { get; internal set; }
+        public MMDevice CaptureDevice { get; private set; }
         /// <summary>
         /// ルーティング先のデバイス
         /// </summary>
-        public MMDevice RenderDevice { get; internal set; }
+        public MMDevice RenderDevice { get; private set; }
         /// <summary>
         /// 利用可能なデバイスを取得します
         /// </summary>

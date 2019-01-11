@@ -9,15 +9,28 @@ using System.Threading.Tasks;
 
 namespace asio4split {
     class Program {
+        [STAThread]
         static void Main(string[] args) {
-            var caps =
-                Enumerable.Range(0, WaveIn.DeviceCount)
-                          .Select(x => WaveIn.GetCapabilities(x))
-                          .ToArray();
-            foreach (var c in caps) {
-                Console.WriteLine($"{c.ProductName}/{c.Channels} channels");
+            var caps = AsioOut.GetDriverNames();
+            Console.WriteLine("# Input Device");
+            var srcIndex = SelectDeviceIndex(caps);
+            Console.WriteLine("# Output Device");
+            var dstIndex = SelectDeviceIndex(caps);
+
+            using (var src = new AsioOut(caps[srcIndex]))
+            using (var dst = new AsioOut(caps[dstIndex])) {
+                float[] buffer = null;
+                src.AudioAvailable += (sx, ex) => {
+                    if (buffer == null) {
+                        buffer = new float[ex.SamplesPerBuffer * src.DriverInputChannelCount];
+                    }
+                    ex.GetAsInterleavedSamples(buffer);
+                };
+                src.InitRecordAndPlayback(null, src.DriverInputChannelCount, 48000);
+                src.Play();
+
+                Console.ReadKey();
             }
-            Console.ReadKey();
 
         }
         /// <summary>
@@ -25,7 +38,7 @@ namespace asio4split {
         /// </summary>
         /// <param name="devices"></param>
         /// <returns></returns>
-        private static int SelectDeviceIndex(MMDevice[] devices) {
+        private static int SelectDeviceIndex(string[] devices) {
             foreach (var x in devices.Select((x, i) => new { Index = i, Value = x })) {
                 Console.WriteLine($"[{x.Index}] {x.Value}");
             }
