@@ -3,6 +3,7 @@ using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace asio4split {
     class Program {
         [STAThread]
         static void Main(string[] args) {
+            var sampleRate = 48000;
             var caps = AsioOut.GetDriverNames();
             Console.WriteLine("# Input Device");
             var srcIndex = SelectDeviceIndex(caps);
@@ -23,10 +25,16 @@ namespace asio4split {
                 src.AudioAvailable += (sx, ex) => {
                     if (buffer == null) {
                         buffer = new float[ex.SamplesPerBuffer * src.DriverInputChannelCount];
+
+                        Console.WriteLine($"DriverName: {src.DriverName}");
+                        Console.WriteLine($"DriverInputChannelCount: {src.DriverInputChannelCount}");
+                        Console.WriteLine($"SamplePerBuffer: {ex.SamplesPerBuffer}");
+                        Console.WriteLine($"AsioSampleType: {ex.AsioSampleType}");
+                        Console.WriteLine($"bufferSize: {buffer.Length}");
                     }
                     ex.GetAsInterleavedSamples(buffer);
                 };
-                src.InitRecordAndPlayback(null, src.DriverInputChannelCount, 48000);
+                src.InitRecordAndPlayback(null, src.DriverInputChannelCount, sampleRate);
                 src.Play();
 
                 Console.ReadKey();
