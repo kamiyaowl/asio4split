@@ -1,5 +1,6 @@
 ﻿using asio4split.Core;
 using NAudio.CoreAudioApi;
+using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,15 +10,13 @@ using System.Threading.Tasks;
 namespace asio4split {
     class Program {
         static void Main(string[] args) {
-            var caps = AudioRouter.GetEndPoints(DataFlow.Capture).ToArray();
-            var renders = AudioRouter.GetEndPoints(DataFlow.Render).ToArray();
-
-            // TODO: UUIDみたいな固有値でStore/Restoreできるように
-            Console.WriteLine("# Capture Device");
-            var cap = SelectDevice(caps);
-            Console.WriteLine("# Render Device");
-            var render = SelectDevice(renders);
-
+            var caps =
+                Enumerable.Range(0, WaveIn.DeviceCount)
+                          .Select(x => WaveIn.GetCapabilities(x))
+                          .ToArray();
+            foreach (var c in caps) {
+                Console.WriteLine($"{c.ProductName}/{c.Channels} channels");
+            }
             Console.ReadKey();
 
         }
@@ -26,7 +25,7 @@ namespace asio4split {
         /// </summary>
         /// <param name="devices"></param>
         /// <returns></returns>
-        private static MMDevice SelectDevice(MMDevice[] devices) {
+        private static int SelectDeviceIndex(MMDevice[] devices) {
             foreach (var x in devices.Select((x, i) => new { Index = i, Value = x })) {
                 Console.WriteLine($"[{x.Index}] {x.Value}");
             }
@@ -35,7 +34,7 @@ namespace asio4split {
                 Console.WriteLine("Invalid index");
                 Environment.Exit(1);
             }
-            return devices[index];
+            return index;
         }
     }
 }
